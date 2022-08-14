@@ -1,0 +1,61 @@
+version: "3.8"
+
+networks:
+  blogsley:
+
+services:
+  # server
+  web:
+    build:
+      context: ./server
+    links:
+      - db
+      - s3
+    env_file: ./config/.env
+    ports:
+      - 8000:8000
+    networks:
+      - blogsley
+    restart: "no"
+    volumes:
+      - "./server:/blogsley"
+
+  # Database
+  db:
+    image: postgres:13.5-bullseye
+    environment:
+      - PGDATA=/pg-data
+    ports:
+      - 5432:5432
+    volumes:
+      - db:/pg-data
+    networks:
+      - blogsley
+
+  # Front-end
+  admin:
+    build:
+      context: ./admin
+      target: quasar-dev
+    ports:
+      - 8080:8080
+    restart: "no"
+    volumes:
+      - "./admin:/admin"
+
+  # Storage
+  blogsley-s3:
+    image: minio/minio
+    ports:
+      - 9000:9000
+    hostname: blogsley-s3.docker
+    networks:
+      blogsley:
+         aliases:
+           - blogsley-s3.docker
+    volumes:
+      - ./volumes/minio:/minio
+    environment:
+      - MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY}
+      - MINIO_SECRET_KEY=${MINIO_SECRET_KEY}
+    command: server /minio
