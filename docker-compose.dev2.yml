@@ -1,20 +1,30 @@
 # Copy to docker-compose.override.yml
 
-volumes:
-  s3:
-  dbadmin:
-
 services:
+
+  # Front-end
+  admin:
+    build:
+      context: ./admin
+      target: quasar-dev
+    env_file: ./config/.env
+    ports:
+      - 8080:8080
+    restart: "no"
+    volumes:
+      - "./admin:/admin"
 
   web:
     build:
       target: development
+
     links:
       - s3
+    env_file: ./config/.env
     environment:
       AWS_S3_ENDPOINT_URL: http://${DOCKER_GATEWAY_HOST:-host.docker.internal}:9000
     labels:
-      - "traefik.http.routers.web.rule=Host(`web.${BLOGSLEY_DOMAIN}`)"
+      - "traefik.http.routers.web.rule=Host(`django.${BLOGSLEY_DOMAIN}`)"
 
   # Traffic
   traefik:
@@ -24,8 +34,7 @@ services:
 
   # Storage
   s3:
-    image: minio/minio:RELEASE.2022-08-11T04-37-28Z
-    command: server /data --console-address ":9001"
+    image: bitnami/minio:latest
     ports:
       - 9000:9000
       - 9001:9001
@@ -56,3 +65,7 @@ services:
         - dbadmin:/var/lib/pgadmin4/storage
     networks:
       - blogsley
+
+volumes:
+  s3:
+  dbadmin:

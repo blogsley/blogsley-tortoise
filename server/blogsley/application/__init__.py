@@ -7,11 +7,12 @@ from ariadne.asgi import GraphQL
 
 from blogsley.schema import create_schema
 from blogsley.resolver import *
+from blogsley.db import init_db
 
 app = None
 
 async def on_startup():
-    pass
+    await init_db()
 
 async def on_shutdown():
     await Tortoise.close_connections()

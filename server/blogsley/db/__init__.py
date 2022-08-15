@@ -11,8 +11,10 @@ async def init_db():
     # Here we create a SQLite DB using file "db.sqlite3"
     #  also specify the app name of "models"
     #  which contain models from "app.models"
+    DB_URL = os.environ.get('DB_URL', 'sqlite://db.sqlite3')
     await Tortoise.init(
-        db_url='sqlite://db.sqlite3',
+        #db_url='sqlite://db.sqlite3',
+        db_url=DB_URL,
         modules={'models': ['blogsley.models']}
     )
     # Generate the schema

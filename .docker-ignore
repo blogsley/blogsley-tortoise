@@ -1,7 +1,7 @@
 # Django project
 /media/
 /static/
-*.sqlite3*
+*.sqlite3
 
 # Python and others
 __pycache__
@@ -37,7 +37,3 @@ wheels/
 *.egg-info/
 .installed.cfg
 *.egg
-
-# Docker
-docker-compose.override.yml
-.env

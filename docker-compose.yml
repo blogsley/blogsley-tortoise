@@ -1,7 +1,12 @@
 version: "3.8"
 
+volumes:
+  db:
+  letsencrypt:
+
 networks:
   blogsley:
+    driver: bridge
 
 services:
   # server
@@ -12,17 +17,27 @@ services:
       - db
       - s3
     env_file: ./config/.env
+    environment:
+      - IN_DOCKER=true
+    hostname: web.${BLOGSLEY_DOMAIN}
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.web.entrypoints=web"
+      - "traefik.http.routers.web.entrypoints=websecure"
+      - "traefik.http.routers.web.middlewares=test-compress"
+      - "traefik.http.middlewares.test-compress.compress=true"
     ports:
       - 4000:4000
     networks:
       - blogsley
     restart: "no"
     volumes:
-      - "./server:/blogsley"
+      - "./server:/app"
 
   # Database
   db:
     image: postgres:13.5-bullseye
+    env_file: ./config/.env
     environment:
       - PGDATA=/pg-data
     ports:
@@ -32,30 +47,28 @@ services:
     networks:
       - blogsley
 
-  # Front-end
-  admin:
-    build:
-      context: ./admin
-      target: quasar-dev
-    ports:
-      - 8080:8080
-    restart: "no"
-    volumes:
-      - "./admin:/admin"
+  # Traffic
+  traefik:
+    image: "traefik:v2.8.3"
+    command:
+      #- "--log.level=DEBUG"
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      - "--certificatesResolvers.le.acme.email=kurtis@political-revolution.com"
+      - "--certificatesresolvers.le.acme.storage=/letsencrypt/acme.json"
+      - "--certificatesResolvers.le.acme.tlsChallenge=true"
+      - "--certificatesResolvers.le.acme.httpChallenge=true"
+      - "--certificatesResolvers.le.acme.httpChallenge.entryPoint=web"
 
-  # Storage
-  blogsley-s3:
-    image: minio/minio
     ports:
-      - 9000:9000
-    hostname: blogsley-s3.docker
-    networks:
-      blogsley:
-         aliases:
-           - blogsley-s3.docker
+      - "80:80"
+      - "8080:8080"
+      - "443:443"
     volumes:
-      - ./volumes/minio:/minio
-    environment:
-      - MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY}
-      - MINIO_SECRET_KEY=${MINIO_SECRET_KEY}
-    command: server /minio
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      - "letsencrypt:/letsencrypt"
+    networks:
+      - blogsley
