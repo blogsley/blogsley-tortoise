@@ -5,11 +5,8 @@ from tortoise.models import Model
 from tortoise import fields
 
 from blogsley.security import generate_password_hash, check_password_hash
-'''
-@login.user_loader
-def load_user(id):
-    return User.query.get(int(id))
-'''
+
+
 class User(Model):
     class PydanticMeta:
         exclude = ["password_salt", "password_hash"]

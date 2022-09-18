@@ -1,14 +1,17 @@
-if __name__ == "__main__":
-    import sys, os
-    sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
-
 import asyncio
+
+import click
 
 from blogsley.db import init_db
 from blogsley.security import generate_password_hash
 
 from blogsley.user import User
 from blogsley.post import Post
+
+@click.command()
+@click.pass_context
+def populate(ctx):
+    asyncio.run(_populate())
 
 block = """
 {
@@ -201,7 +204,7 @@ block = """
 async def _populate():
     await init_db()
 
-    (salt, key) = generate_password_hash("blogsley")
+    (salt, key) = generate_password_hash('blogsley')
     u = User(
         username="admin",
         firstName="The",
@@ -212,7 +215,6 @@ async def _populate():
         password_salt=salt,
         password_hash=key,
     )
-    u.password = "admin"
     await u.save()
 
     u = User(
@@ -275,11 +277,3 @@ async def _populate():
     
     for p in posts:
         print(p.id, p.author.username, p.body)
-
-def populate():
-    asyncio.run(_populate())
-
-if __name__ == "__main__":
-    from blogsley.application import create_app
-    app = create_app()
-    populate(app)

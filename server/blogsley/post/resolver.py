@@ -1,25 +1,17 @@
 from loguru import logger
 
-from tortoise import Tortoise
-from tortoise.contrib.pydantic import pydantic_model_creator, pydantic_queryset_creator
+from blogsley.iam import iam
 
-from blogsley.schema import query, mutation, subscription
-from blogsley.post.schema import PostConnection, PostEdge, PostNode
-from blogsley.post.hub import hub, PostSubscriber, PostEvent
-from blogsley.post.entity import Post
-
-# Initialise model structure early. This does not init any database structures
-Tortoise.init_models(["blogsley.models"], "models")
-
-PostDto = pydantic_model_creator(Post)
-PostDtoList = pydantic_queryset_creator(Post)
+from .schema import *
+from .hub import hub, PostSubscriber, PostEvent
+from .entity import Post
 
 # Queries
 
 @query.field("post")
 async def resolve_post(*_, id):
-  #return Post[id]
-  return await Post.get(id=id)
+    #return Post[id]
+    return await Post.get(id=id)
 
 @query.field("allPosts")
 async def resolve_all_posts(_, info, after:str=None, before:str=None, first:int=0, last:int=0):
@@ -31,14 +23,29 @@ async def resolve_all_posts(_, info, after:str=None, before:str=None, first:int=
 
 # Mutations
 
+@mutation.field("createPost")
+async def resolve_create_post(_, info, data):
+    logger.debug('post:create')
+    #print(data)
+    post_input = PostInput(**data)
+    user = await iam(info)
+    post = await Post.create(author=user, **post_input.dict())
+    await post.save()
+    event = PostEvent(id, 'create')
+    await hub.send(event)
+    post_dto = PostDto.from_orm(post)
+    return post_dto
+
 @mutation.field("updatePost")
 async def resolve_update_post(_, info, id, data):
     logger.debug('post:update')
     #print(data)
-    request = info.context["request"]
-    Post[id].set(**data)
+    post = await Post[id]
+    post.update_from_dict(data)
+    await post.save()
     event = PostEvent(id, 'update')
     await hub.send(event)
+    return event
 
 # Subscriptions
 

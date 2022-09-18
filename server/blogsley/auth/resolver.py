@@ -12,7 +12,7 @@ from blogsley.auth.jwt import encode_auth_token, decode_auth_token
 @mutation.field("login")
 async def resolve_login(_, info, data):
     logger.debug(f'Login {data}')
-    request = info.context["request"]
+
     username=data['username']
     password=data['password']
 
@@ -21,7 +21,6 @@ async def resolve_login(_, info, data):
     if not password:
         raise Exception('Password missing!')
 
-    #user = User.select(lambda p:p.username == username).first()
     user = await User.filter(username=username).first()
 
     if user is None or not user.check_password(password):

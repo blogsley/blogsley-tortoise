@@ -1,7 +1,10 @@
 import jwt
 import datetime
+
+from loguru import logger
+
 from blogsley.config import config
-from blogsley.user import User
+
 
 def encode_auth_token(**kwargs):
     payload = {
@@ -13,25 +16,26 @@ def encode_auth_token(**kwargs):
         payload[key] = value
 
     return jwt.encode(
-        payload,
-        config.get('SECRET_KEY')
+        payload=payload,
+        key=config.get('SECRET_KEY'),
+        algorithm='HS256'
     )
 
-def load_user(info):
-    token = decode_auth_token(info.context)
-    print(token)
-    return User.query.get(token['id'])
 
 def decode_auth_token(request):
+    logger.debug(request.headers)
     auth_token = request.headers.get('Authorization')
-    print('decode')
-    print(auth_token)
-    secret = app.config.get('SECRET_KEY')
-    print(secret)
+    logger.debug(auth_token)
+    secret = config.get('SECRET_KEY')
+    logger.debug(secret)
     if not auth_token:
         auth_token = ''
     try:
-        payload = jwt.decode(auth_token, app.config.get('SECRET_KEY'))
+        payload = jwt.decode(
+            jwt=auth_token,
+            key=config.get('SECRET_KEY'),
+            algorithms=['HS256']
+        )
         return payload
     except jwt.ExpiredSignatureError:
         return 'Signature expired. Please log in again.'

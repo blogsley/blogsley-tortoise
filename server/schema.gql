@@ -40,6 +40,11 @@ input UserInput {
   lastName: String!
 }
 
+type UserEvent {
+  kind: String!
+  ok: Boolean!
+}
+
 #Post
 type PostConnection {
   edges: [PostEdge!]!
@@ -96,7 +101,7 @@ type Mutation {
   login(data: LoginInput!): LogIn!
 
   createUser(data: UserInput!): User!
-  updateUser(id: ID!, data: UserInput!): User
+  updateUser(id: ID!, data: UserInput!): UserEvent
   deleteUser(id: ID!): Boolean!
  
   createPost(data: PostInput!): Post!

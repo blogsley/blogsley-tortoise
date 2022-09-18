@@ -4,11 +4,13 @@ from starlette.middleware.cors import CORSMiddleware
 from tortoise import Tortoise
 
 from ariadne.asgi import GraphQL
+from ariadne.asgi.handlers import GraphQLTransportWSHandler
 
 from blogsley.schema import create_schema
 from blogsley.resolver import *
 from blogsley.db import init_db
 
+DEBUG = True
 app = None
 
 async def on_startup():
@@ -17,13 +19,13 @@ async def on_startup():
 async def on_shutdown():
     await Tortoise.close_connections()
 
-def create_app(debug=True):
+def create_app():
     global app
     if app:
         return app
 
     app = Starlette(
-        debug=debug,
+        debug=DEBUG,
         on_startup=[on_startup],
         on_shutdown=[on_shutdown]
     )
@@ -36,5 +38,9 @@ def create_app(debug=True):
         allow_headers=["*"],
     )
     schema = create_schema()
-    app.mount("/graphql", GraphQL(schema, debug=debug))
+    app.mount("/graphql", GraphQL(
+        schema,
+        debug=DEBUG,
+        #websocket_handler=GraphQLTransportWSHandler(),
+    ))
     return app

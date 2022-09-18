@@ -1,2 +1,3 @@
-from blogsley.user import *
-from blogsley.post import *
+from .user import *
+from .post import *
+#from .image import *

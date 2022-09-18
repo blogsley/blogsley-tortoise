@@ -1,2 +1,2 @@
-from blogsley.command import cli
-cli()
+from blogsley.cli import entry_point
+entry_point()

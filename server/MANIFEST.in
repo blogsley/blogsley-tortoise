@@ -1,6 +1,0 @@
-# MANIFEST.in
-# Applies to package *data* only
-
-# Assets/Database/Etc
-
-recursive-include share *

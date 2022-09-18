@@ -1,3 +1,3 @@
-import blogsley.auth.resolver
-import blogsley.user.resolver
-import blogsley.post.resolver
+from .auth.resolver import *
+from .user.resolver import *
+from .post.resolver import *

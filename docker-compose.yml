@@ -1,12 +1,10 @@
-version: "3.8"
+networks:
+  blogsley:
+    driver: bridge
 
 volumes:
   db:
   letsencrypt:
-
-networks:
-  blogsley:
-    driver: bridge
 
 services:
   # server

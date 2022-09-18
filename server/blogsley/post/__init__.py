@@ -1,1 +1,1 @@
-from blogsley.post.entity import Post
+from .entity import Post
